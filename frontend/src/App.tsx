@@ -12,6 +12,8 @@ export default function App() {
   const v = useViewer();
   const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set());
   const [search, setSearch] = useState('');
+  const [profilesCollapsed, setProfilesCollapsed] = useState(false);
+  const [stepsCollapsed, setStepsCollapsed] = useState(false);
 
   const presentCategories = useMemo(() => {
     if (!v.stepDetail) return [];
@@ -54,33 +56,52 @@ export default function App() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left: profile list */}
-        <aside className="w-72 shrink-0 border-r border-gray-800 bg-gray-900/30">
+        <aside className={`shrink-0 border-r border-gray-800 bg-gray-900/30 transition-all duration-200 ${profilesCollapsed ? 'w-10' : 'w-72'}`}>
           <ProfileList
             profiles={v.profiles}
             selectedId={v.selectedProfileId}
             onSelect={v.selectProfile}
+            collapsed={profilesCollapsed}
+            onToggleCollapse={() => setProfilesCollapsed((c) => !c)}
           />
         </aside>
 
         {/* Middle-left: step list + filters */}
-        <aside className="w-64 shrink-0 border-r border-gray-800 bg-gray-900/30 flex flex-col">
-          <div className="flex-1 min-h-0">
-            <StepList
-              steps={v.steps}
-              loading={v.stepsLoading}
-              selectedId={v.selectedStepId}
-              onSelect={v.selectStep}
-            />
-          </div>
-          <div className="border-t border-gray-800 max-h-64 overflow-y-auto">
-            <SearchFilter
-              search={search}
-              onSearchChange={setSearch}
-              presentCategories={presentCategories}
-              hiddenCategories={hiddenCategories}
-              onToggleCategory={toggleCategory}
-            />
-          </div>
+        <aside className={`shrink-0 border-r border-gray-800 bg-gray-900/30 flex flex-col transition-all duration-200 ${stepsCollapsed ? 'w-10' : 'w-64'}`}>
+          {stepsCollapsed ? (
+            <button
+              onClick={() => setStepsCollapsed(false)}
+              className="flex flex-col items-center pt-2 gap-2 text-gray-400 hover:text-gray-200 hover:bg-gray-800/60 transition-colors"
+              title="Expand steps panel"
+            >
+              <span className="text-xs">▶</span>
+              <span className="text-[10px] tracking-wider" style={{ writingMode: 'vertical-rl' }}>
+                STEPS
+              </span>
+            </button>
+          ) : (
+            <>
+              <div className="flex-1 min-h-0">
+                <StepList
+                  steps={v.steps}
+                  loading={v.stepsLoading}
+                  selectedId={v.selectedStepId}
+                  onSelect={v.selectStep}
+                  collapsed={stepsCollapsed}
+                  onToggleCollapse={() => setStepsCollapsed(true)}
+                />
+              </div>
+              <div className="border-t border-gray-800 max-h-64 overflow-y-auto">
+                <SearchFilter
+                  search={search}
+                  onSearchChange={setSearch}
+                  presentCategories={presentCategories}
+                  hiddenCategories={hiddenCategories}
+                  onToggleCategory={toggleCategory}
+                />
+              </div>
+            </>
+          )}
         </aside>
 
         {/* Main: timeline + event detail */}

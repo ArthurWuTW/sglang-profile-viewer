@@ -14,13 +14,37 @@ interface Props {
   profiles: ProfileSummary[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
-export default function ProfileList({ profiles, selectedId, onSelect }: Props) {
+export default function ProfileList({ profiles, selectedId, onSelect, collapsed, onToggleCollapse }: Props) {
+  if (collapsed) {
+    return (
+      <button
+        onClick={onToggleCollapse}
+        className="flex flex-col items-center pt-2 gap-2 text-gray-400 hover:text-gray-200 hover:bg-gray-800/60 transition-colors h-full"
+        title="Expand profiles panel"
+      >
+        <span className="text-xs">▶</span>
+        <span className="text-[10px] tracking-wider" style={{ writingMode: 'vertical-rl' }}>
+          PROFILES ({profiles.length})
+        </span>
+      </button>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
-      <div className="px-3 py-2 border-b border-gray-800 text-xs font-semibold uppercase tracking-wider text-gray-400">
-        Profiles ({profiles.length})
+      <div className="px-3 py-2 border-b border-gray-800 text-xs font-semibold uppercase tracking-wider text-gray-400 flex items-center justify-between">
+        <span>Profiles ({profiles.length})</span>
+        <button
+          onClick={onToggleCollapse}
+          className="text-gray-500 hover:text-gray-200 text-xs px-1"
+          title="Collapse"
+        >
+          ◀
+        </button>
       </div>
       <div className="flex-1 overflow-y-auto">
         {profiles.length === 0 && (

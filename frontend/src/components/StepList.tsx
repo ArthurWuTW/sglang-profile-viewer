@@ -10,9 +10,11 @@ interface Props {
   loading: boolean;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
 }
 
-export default function StepList({ steps, loading, selectedId, onSelect }: Props) {
+export default function StepList({ steps, loading, selectedId, onSelect, onToggleCollapse, collapsed }: Props) {
   const [stageFilter, setStageFilter] = useState<string>('ALL');
 
   const stages = useMemo(() => {
@@ -31,24 +33,48 @@ export default function StepList({ steps, loading, selectedId, onSelect }: Props
     return STAGE_ORDER.filter((st) => map.has(st)).map((st) => ({ stage: st, items: map.get(st)! }));
   }, [steps, stageFilter]);
 
+  if (collapsed) {
+    return (
+      <button
+        onClick={onToggleCollapse}
+        className="flex flex-col items-center pt-2 gap-2 text-gray-400 hover:text-gray-200 hover:bg-gray-800/60 transition-colors h-full"
+        title="Expand steps panel"
+      >
+        <span className="text-xs">▶</span>
+        <span className="text-[10px] tracking-wider" style={{ writingMode: 'vertical-rl' }}>
+          STEPS ({steps.length})
+        </span>
+      </button>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="px-3 py-2 border-b border-gray-800 flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
           Steps ({steps.length})
         </span>
-        <select
-          value={stageFilter}
-          onChange={(e) => setStageFilter(e.target.value)}
-          className="bg-gray-900 border border-gray-700 rounded text-xs px-1.5 py-0.5 text-gray-300"
-        >
-          <option value="ALL">All stages</option>
-          {stages.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-1">
+          <select
+            value={stageFilter}
+            onChange={(e) => setStageFilter(e.target.value)}
+            className="bg-gray-900 border border-gray-700 rounded text-xs px-1.5 py-0.5 text-gray-300"
+          >
+            <option value="ALL">All stages</option>
+            {stages.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={onToggleCollapse}
+            className="text-gray-500 hover:text-gray-200 text-xs px-1"
+            title="Collapse"
+          >
+            ◀
+          </button>
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto">
         {loading && <div className="p-3 text-sm text-gray-500">Loading steps…</div>}
