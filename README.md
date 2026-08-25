@@ -43,7 +43,32 @@ process serves both the API and the UI.
 
 ## Quick start
 
-### 1. Build the frontend (one time)
+### One-command run (recommended)
+
+`run.sh` builds the frontend (if needed) and starts the backend in one step:
+
+```bash
+./run.sh               # build frontend (if stale/missing) + start backend
+./run.sh --no-build    # skip the frontend build, just start the backend
+./run.sh --rebuild     # force a clean frontend rebuild
+PORT=8080 ./run.sh     # override any setting via environment variables
+```
+
+The script:
+- runs `npm install` only if `frontend/node_modules` is missing, then
+  `npm run build` only if `frontend/dist` is absent, stale, or `--rebuild` is
+  passed;
+- auto-installs backend deps (`pip install -e backend/`) if imports fail;
+- prefers `python3.12`, falling back to `python3`;
+- serves the built frontend from `frontend/dist` and the API from the same
+  process.
+
+Then open <http://127.0.0.1:8080>.
+
+### Manual (build + run separately)
+
+<details>
+<summary>Build the frontend</summary>
 
 ```bash
 cd frontend
@@ -51,7 +76,10 @@ npm install
 npm run build          # outputs frontend/dist
 ```
 
-### 2. Start the backend (serves API + UI)
+</details>
+
+<details>
+<summary>Start the backend (serves API + UI)</summary>
 
 ```bash
 cd backend
@@ -62,7 +90,7 @@ PORT=8080 \
 python3.12 -m uvicorn app.main:app --host 0.0.0.0 --port 6006
 ```
 
-Then open <http://127.0.0.1:8080>.
+</details>
 
 ### Configuration (environment variables)
 
@@ -207,5 +235,6 @@ sglang-profile-viewer/
 ├── mappings/                    # base.yaml, sglang.yaml, flashinfer.yaml
 ├── fixtures/profile/golden/     # synthetic golden trace
 ├── scripts/make_golden_fixture.py
+├── run.sh                       # build frontend + start backend
 └── spec/                        # scope + technical specifications
 ```
