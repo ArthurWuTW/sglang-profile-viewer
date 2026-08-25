@@ -54,7 +54,7 @@ class Settings:
         frontend_dist = Path(frontend_dist_raw) if frontend_dist_raw else None
         return cls(
             profile_root=profile_root,
-            host=o.get("host") or _env("HOST", "127.0.0.1"),
+            host=o.get("host") or _env("HOST", "0.0.0.0"),
             port=_env_int("PORT", 6006),
             watch_interval=_env_float("WATCH_INTERVAL", 2.0),
             file_stability_delay=_env_float("FILE_STABILITY_CHECK_DELAY", 1.0),

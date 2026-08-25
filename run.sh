@@ -9,7 +9,7 @@
 #
 # Configuration is via environment variables (see README.md for the full list):
 #   PROFILE_ROOT   directory scanned for *.json.gz traces (default /root/.cache/profile_log)
-#   HOST           bind host (default 127.0.0.1)
+#   HOST           bind host (default 0.0.0.0)
 #   PORT           bind port (default 6006)
 #   LOG_LEVEL      backend log level (default INFO)
 #
@@ -131,7 +131,7 @@ check_backend_deps
 
 # Default the profile root if the caller did not set one.
 export PROFILE_ROOT="${PROFILE_ROOT:-/root/.cache/profile_log}"
-export HOST="${HOST:-127.0.0.1}"
+export HOST="${HOST:-0.0.0.0}"
 export PORT="${PORT:-6006}"
 export LOG_LEVEL="${LOG_LEVEL:-INFO}"
 # Point the backend at the built frontend and the mappings directory.

@@ -97,7 +97,7 @@ python3.12 -m uvicorn app.main:app --host 0.0.0.0 --port 6006
 | Variable                   | Default                     | Description                              |
 | -------------------------- | --------------------------- | ---------------------------------------- |
 | `PROFILE_ROOT`             | `/root/.cache/profile_log`  | Directory scanned for `*.json.gz` traces |
-| `HOST`                     | `127.0.0.1`                 | Bind host                                |
+| `HOST`                     | `0.0.0.0`                   | Bind host                                |
 | `PORT`                     | `6006`                      | Bind port                                |
 | `WATCH_INTERVAL`           | `2.0`                       | Periodic rescan interval (seconds)       |
 | `FILE_STABILITY_CHECK_DELAY` | `1.0`                     | Size-stability wait before parsing (s)   |
