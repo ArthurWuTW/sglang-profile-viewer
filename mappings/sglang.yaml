@@ -19,6 +19,59 @@
       Per-forward step span wrapping ModelRunner.forward; the label carries the
       forward mode (stage) and batch shape, e.g. step[DECODE bs=1].
 
+# ---------------------------------------------------------------- NVTX ranges
+- id: sglang.nvtx.apply_rope_inplace
+  display_name: "Apply RoPE (inplace)"
+  category: ROPE
+  framework: sglang
+  match:
+    exact: ["sglang::apply_rope_inplace"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/kernels/ops/attention/rope.py
+    symbol: apply_rope_inplace
+    description: "NVTX range wrapping the in-place RoPE application on Q/K tensors."
+
+- id: sglang.nvtx.store_cache
+  display_name: "Store KV Cache"
+  category: KV_CACHE
+  framework: sglang
+  match:
+    exact: ["sglang::store_cache"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/kernels/ops/kvcache/kvcache.py
+    symbol: store_cache
+    description: "NVTX range wrapping the KV cache store operation."
+
+- id: sglang.nvtx.run_activation_inplace
+  display_name: "Activation (inplace)"
+  category: ACTIVATION
+  framework: sglang
+  match:
+    exact: ["sglang::_run_activation_inplace"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/kernels/ops/activation/activation.py
+    symbol: _run_activation_inplace
+    description: "NVTX range wrapping the in-place MLP activation (SiLU*gate)."
+
+- id: sglang.nvtx.unified_attention
+  display_name: "Unified Attention"
+  category: ATTENTION
+  framework: sglang
+  match:
+    exact: ["sglang::unified_attention_with_output"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/radix_attention.py
+    symbol: unified_attention_with_output
+    description: "NVTX range wrapping the unified attention forward pass."
+
 # ---------------------------------------------------------------- Scheduler
 - id: sglang.scheduler.run_batch
   display_name: "Scheduler: run_batch"

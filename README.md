@@ -184,6 +184,18 @@ Rules live in `mappings/` (YAML). Each rule has an `id`, `display_name`,
     description: Stores K/V into the paged KV cache.
 ```
 
+Python-level profiler events (category `python_function`, names like
+`sglang/srt/managers/scheduler.py(1732): run_event_loop`) are mapped by file
+path via `contains` matching in `mappings/sglang_python.yaml`, grouping each
+SGLang module (scheduler, model executor, attention, KV cache, sampling, ...)
+into a semantic category.
+
+Python-level function events (category `python_function`, names like
+`sglang/srt/managers/scheduler.py(1732): run_event_loop`) are mapped by file
+path via `contains` matching in `mappings/sglang_python.yaml`. This covers all
+SGLang SRT modules: scheduler, model executor, attention backends, KV cache,
+sampling, and more.
+
 Add a new rule by appending to (or creating a file in) `mappings/`; the backend
 picks it up on restart. Every new rule should come with a test in
 `backend/tests/test_semantic_mapper.py`.
@@ -232,7 +244,7 @@ sglang-profile-viewer/
 │   │   └── utils/               # colors, formatting
 │   ├── package.json
 │   └── vite.config.ts
-├── mappings/                    # base.yaml, sglang.yaml, flashinfer.yaml
+├── mappings/                    # base.yaml, sglang.yaml, sglang_python.yaml, flashinfer.yaml
 ├── fixtures/profile/golden/     # synthetic golden trace
 ├── scripts/make_golden_fixture.py
 ├── run.sh                       # build frontend + start backend

@@ -1,0 +1,698 @@
+# SGLang Python-level function mappings.
+#
+# These map Python profiler events (category: python_function) to semantic
+# categories. Event names have the format:
+#   sglang/srt/<path>.py(<line>): <function_name>
+#
+# We match on the file path portion using `contains` matching.
+# More specific paths must appear before more general ones.
+
+# ---------------------------------------------------------------- Attention
+- id: sglang.py.attn.flashinfer
+  display_name: "FlashInfer Attention Backend"
+  category: ATTENTION
+  framework: sglang
+  match:
+    contains: ["sglang/srt/layers/attention/flashinfer_backend.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/attention/flashinfer_backend.py
+    symbol: FlashInferBackend
+    description: "FlashInfer attention backend (forward, metadata init, KV write)."
+
+- id: sglang.py.attn.base
+  display_name: "Attention Backend (base)"
+  category: ATTENTION
+  framework: sglang
+  match:
+    contains: ["sglang/srt/layers/attention/base_attn_backend.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/attention/base_attn_backend.py
+    symbol: AttentionBackend.forward
+    description: "Base attention backend forward dispatch."
+
+- id: sglang.py.attn.radix
+  display_name: "Radix Attention"
+  category: ATTENTION
+  framework: sglang
+  match:
+    contains: ["sglang/srt/layers/radix_attention.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/radix_attention.py
+    symbol: RadixAttention.forward
+    description: "Radix attention layer forward (dispatches to backend)."
+
+- id: sglang.py.attn.dp
+  display_name: "DP Attention"
+  category: ATTENTION
+  framework: sglang
+  match:
+    contains: ["sglang/srt/layers/dp_attention.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/dp_attention.py
+    symbol: DpAttention
+    description: "Data-parallel attention layer."
+
+- id: sglang.py.attn.cp
+  display_name: "Context Parallel Attention"
+  category: ATTENTION
+  framework: sglang
+  match:
+    contains: ["sglang/srt/layers/cp/"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/cp/base.py
+    symbol: get_cp_strategy
+    description: "Context-parallel attention utilities."
+
+- id: sglang.py.attn.dsa
+  display_name: "DSA Attention Utils"
+  category: ATTENTION
+  framework: sglang
+  match:
+    contains: ["sglang/srt/layers/attention/dsa/"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/attention/dsa/utils.py
+    symbol: is_dsa_enable_prefill_cp
+    description: "DeepSeek-style attention (DSA) utilities."
+
+# ---------------------------------------------------------------- RoPE
+- id: sglang.py.rope
+  display_name: "RoPE (Python)"
+  category: ROPE
+  framework: sglang
+  match:
+    contains: ["sglang/srt/layers/rotary_embedding/"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/rotary_embedding/base.py
+    symbol: RotaryEmbedding.forward_cuda
+    description: "Rotary position embedding forward pass."
+
+- id: sglang.py.rope.position
+  display_name: "Position Compute"
+  category: ROPE
+  framework: sglang
+  match:
+    contains: ["sglang/kernels/ops/attention/position.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/kernels/ops/attention/position.py
+    symbol: compute_position_triton
+    description: "Triton kernel for computing position IDs."
+
+# ---------------------------------------------------------------- RMSNorm
+- id: sglang.py.layernorm
+  display_name: "RMSNorm (Python)"
+  category: RMSNORM
+  framework: sglang
+  match:
+    contains: ["sglang/srt/layers/layernorm.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/layernorm.py
+    symbol: RMSNorm
+    description: "RMSNorm layer forward pass (Python wrapper)."
+
+# ---------------------------------------------------------------- Linear / GEMM
+- id: sglang.py.linear
+  display_name: "Linear (Python)"
+  category: LINEAR
+  framework: sglang
+  match:
+    contains: ["sglang/srt/layers/linear.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/linear.py
+    symbol: Linear.forward
+    description: "Linear projection layer (QKV/O/gate_up/down)."
+
+- id: sglang.py.quantization
+  display_name: "Quantized Linear"
+  category: LINEAR
+  framework: sglang
+  match:
+    contains: ["sglang/srt/layers/quantization/"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/quantization/unquant.py
+    symbol: UnquantizedLinearMethod.apply
+    description: "Quantization method dispatch for linear layers."
+
+# ---------------------------------------------------------------- MLP / Activation
+- id: sglang.py.activation
+  display_name: "MLP Activation (Python)"
+  category: ACTIVATION
+  framework: sglang
+  match:
+    contains: ["sglang/srt/layers/activation.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/activation.py
+    symbol: SiluAndMul.forward_cuda
+    description: "SiLU activation + multiply (MLP gate)."
+
+- id: sglang.py.activation_kernel
+  display_name: "Activation Kernel (Python)"
+  category: ACTIVATION
+  framework: sglang
+  match:
+    contains: ["sglang/kernels/ops/activation/"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/kernels/ops/activation/activation.py
+    symbol: silu_and_mul
+    description: "Triton/CUDA activation kernel wrapper."
+
+# ---------------------------------------------------------------- Embedding
+- id: sglang.py.embedding
+  display_name: "Vocab Parallel Embedding"
+  category: EMBEDDING
+  framework: sglang
+  match:
+    contains: ["sglang/srt/layers/vocab_parallel_embedding.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/vocab_parallel_embedding.py
+    symbol: VocabParallelEmbedding.forward
+    description: "Vocabulary-parallel embedding lookup."
+
+# ---------------------------------------------------------------- Sampling
+- id: sglang.py.sampler
+  display_name: "Sampler"
+  category: SAMPLING
+  framework: sglang
+  match:
+    contains: ["sglang/srt/layers/sampler.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/sampler.py
+    symbol: Sampler.forward
+    description: "Token sampling (top-k, top-p, temperature, penalties)."
+
+- id: sglang.py.sampling_batch
+  display_name: "Sampling Batch Info"
+  category: SAMPLING
+  framework: sglang
+  match:
+    contains: ["sglang/srt/sampling/sampling_batch_info.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/sampling/sampling_batch_info.py
+    symbol: SamplingBatchInfo
+    description: "Sampling parameters batch preparation."
+
+- id: sglang.py.sampling_penalty
+  display_name: "Sampling Penalties"
+  category: SAMPLING
+  framework: sglang
+  match:
+    contains: ["sglang/srt/sampling/penaltylib/"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/sampling/penaltylib/orchestrator.py
+    symbol: PenaltyOrchestrator
+    description: "Repetition/frequency/presence penalty computation."
+
+# ---------------------------------------------------------------- Logits
+- id: sglang.py.logits
+  display_name: "Logits Processor"
+  category: SAMPLING
+  framework: sglang
+  match:
+    contains: ["sglang/srt/layers/logits_processor.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/logits_processor.py
+    symbol: LogitsProcessor.forward
+    description: "Logits computation and post-processing (LM head, DP gather)."
+
+# ---------------------------------------------------------------- KV Cache / Memory
+- id: sglang.py.memcache
+  display_name: "KV Cache (Python)"
+  category: KV_CACHE
+  framework: sglang
+  match:
+    contains: ["sglang/srt/mem_cache/"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/mem_cache/
+    symbol: ""
+    description: "KV cache management (radix cache, allocation, eviction)."
+
+- id: sglang.py.kvcache_kernel
+  display_name: "KV Cache Kernel (Python)"
+  category: KV_CACHE
+  framework: sglang
+  match:
+    contains: ["sglang/kernels/ops/kvcache/"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/kernels/ops/kvcache/kvcache.py
+    symbol: store_cache
+    description: "KV cache store kernel (Python wrapper)."
+
+# ---------------------------------------------------------------- Scheduler
+- id: sglang.py.scheduler
+  display_name: "Scheduler"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/managers/scheduler.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/scheduler.py
+    symbol: Scheduler
+    description: "Main scheduler event loop and batch management."
+
+- id: sglang.py.schedule_batch
+  display_name: "Schedule Batch"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/managers/schedule_batch.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/schedule_batch.py
+    symbol: ScheduleBatch
+    description: "Batch construction and management (prefill/decode batches)."
+
+- id: sglang.py.schedule_policy
+  display_name: "Schedule Policy"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/managers/schedule_policy.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/schedule_policy.py
+    symbol: SchedulePolicy
+    description: "Scheduling policy (FCFS, LPM, etc.)."
+
+- id: sglang.py.scheduler_components
+  display_name: "Scheduler Components"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/managers/scheduler_components/"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/scheduler_components/
+    symbol: ""
+    description: "Scheduler sub-components (result processing, output streaming, metrics)."
+
+- id: sglang.py.tp_worker
+  display_name: "TP Worker"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/managers/tp_worker.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/tp_worker.py
+    symbol: TpModelWorker
+    description: "Tensor-parallel worker managing model runner."
+
+- id: sglang.py.overlap_utils
+  display_name: "Overlap Utils"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/managers/overlap_utils.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/overlap_utils.py
+    symbol: resolve_forward_inputs
+    description: "CPU/GPU overlap utilities for pipeline parallelism."
+
+- id: sglang.py.io_struct
+  display_name: "IPC / IO Struct"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/managers/io_struct.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/io_struct.py
+    symbol: sock_send
+    description: "Inter-process communication structures (ZMQ sockets)."
+
+- id: sglang.py.load_snapshot
+  display_name: "Load Snapshot"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/managers/load_snapshot.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/load_snapshot.py
+    symbol: write
+    description: "Load snapshot persistence for fault tolerance."
+
+- id: sglang.py.mm_utils
+  display_name: "Multimodal Utils"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/managers/mm_utils.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/mm_utils.py
+    symbol: unwrap_shm_features
+    description: "Multimodal input handling utilities."
+
+- id: sglang.py.managers_utils
+  display_name: "Managers Utils"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/managers/utils.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/utils.py
+    symbol: copy_to_cpu
+    description: "Utility functions for the scheduler/manager layer."
+
+# ---------------------------------------------------------------- Model Executor
+- id: sglang.py.model_runner
+  display_name: "Model Runner"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/model_executor/model_runner.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/model_executor/model_runner.py
+    symbol: ModelRunner.forward
+    description: "Model forward pass orchestration (forward, sample, CUDA graph dispatch)."
+
+- id: sglang.py.forward_batch_info
+  display_name: "Forward Batch Info"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/model_executor/forward_batch_info.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/model_executor/forward_batch_info.py
+    symbol: ForwardBatch
+    description: "Forward batch metadata (seq lens, positions, attention metadata)."
+
+- id: sglang.py.forward_context
+  display_name: "Forward Context"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/model_executor/forward_context.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/model_executor/forward_context.py
+    symbol: set_forward_context
+    description: "Thread-local forward context (attention backend, batch info)."
+
+- id: sglang.py.cuda_graph_runner
+  display_name: "CUDA Graph Runner"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/model_executor/runner/"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/model_executor/runner/
+    symbol: ""
+    description: "CUDA graph capture/replay runners (decode, prefill, eager)."
+
+- id: sglang.py.cuda_graph_registry
+  display_name: "CUDA Graph Buffer Registry"
+  category: MEMORY
+  framework: sglang
+  match:
+    contains: ["sglang/srt/model_executor/cuda_graph_buffer_registry.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/model_executor/cuda_graph_buffer_registry.py
+    symbol: CudaGraphBufferRegistry
+    description: "Manages CUDA graph buffer allocation and slot management."
+
+- id: sglang.py.graph_memory
+  display_name: "Graph Memory Usage"
+  category: MEMORY
+  framework: sglang
+  match:
+    contains: ["sglang/srt/model_executor/graph_memory_usage.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/model_executor/graph_memory_usage.py
+    symbol: merge_graph_memory_usage
+    description: "CUDA graph memory usage tracking."
+
+- id: sglang.py.graph_shared_output
+  display_name: "Graph Shared Output"
+  category: MEMORY
+  framework: sglang
+  match:
+    contains: ["sglang/srt/model_executor/graph_shared_output.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/model_executor/graph_shared_output.py
+    symbol: get_logits_buffer
+    description: "Shared output buffer for CUDA graph replay."
+
+- id: sglang.py.step_span
+  display_name: "Step Span Utils"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/model_executor/step_span_utils.py"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/model_executor/step_span_utils.py
+    symbol: build_step_span_name
+    description: "Builds NVTX step span names for profiling."
+
+- id: sglang.py.model_runner_components
+  display_name: "Model Runner Components"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/model_executor/model_runner_components/"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/model_executor/model_runner_components/
+    symbol: ""
+    description: "Model runner sub-components (e.g. n-gram embedding manager)."
+
+- id: sglang.py.runner_backend
+  display_name: "Runner Backend"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/model_executor/runner_backend/"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/model_executor/runner_backend/
+    symbol: ""
+    description: "CUDA graph backend implementations (breakable, full)."
+
+- id: sglang.py.runner_utils
+  display_name: "Runner Utils"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/model_executor/runner_utils/"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/model_executor/runner_utils/
+    symbol: ""
+    description: "Runner utilities (pool, shared read events, DeepEP adapter)."
+
+# ---------------------------------------------------------------- Distributed / Communication
+- id: sglang.py.distributed
+  display_name: "Distributed (Parallel State)"
+  category: SYNCHRONIZATION
+  framework: sglang
+  match:
+    contains: ["sglang/srt/distributed/"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/distributed/parallel_state.py
+    symbol: get_tp_group
+    description: "Distributed parallel state (TP/PP/DP groups, NCCL communicators)."
+
+# ---------------------------------------------------------------- Speculative Decoding
+- id: sglang.py.speculative
+  display_name: "Speculative Decoding"
+  category: OTHER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/speculative/"]
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/srt/speculative/spec_info.py
+    symbol: SpecInfo
+    description: "Speculative decoding state (draft/verify info)."
+
+# ---------------------------------------------------------------- Other / Infrastructure
+- id: sglang.py.observability
+  display_name: "Observability"
+  category: OTHER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/observability/"]
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/srt/observability/
+    symbol: ""
+    description: "Metrics collection, request timing, tracing."
+
+- id: sglang.py.session
+  display_name: "Session"
+  category: OTHER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/session/"]
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/srt/session/
+    symbol: ""
+    description: "Session management (streaming sessions, KV cache pinning)."
+
+- id: sglang.py.constrained
+  display_name: "Constrained Decoding"
+  category: OTHER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/constrained/"]
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/srt/constrained/grammar_manager.py
+    symbol: GrammarManager
+    description: "Grammar-constrained decoding (xgrammar/outline)."
+
+- id: sglang.py.runtime_context
+  display_name: "Runtime Context"
+  category: OTHER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/runtime_context.py"]
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/srt/runtime_context.py
+    symbol: RuntimeContext
+    description: "Global runtime context (server args, parallelism config)."
+
+- id: sglang.py.environ
+  display_name: "Environment"
+  category: OTHER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/environ.py"]
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/srt/environ.py
+    symbol: get
+    description: "Environment variable resolution."
+
+- id: sglang.py.utils
+  display_name: "Utils"
+  category: OTHER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/utils/"]
+  confidence: low
+  source:
+    repository: sglang
+    path: python/sglang/srt/utils/
+    symbol: ""
+    description: "General utility functions (NVTX, device timer, watchdog, etc.)."
+
+- id: sglang.py.kernels
+  display_name: "Kernel Launch (Python)"
+  category: OTHER
+  framework: sglang
+  match:
+    contains: ["sglang/kernels/"]
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/kernels/
+    symbol: ""
+    description: "Python wrappers around SGLang CUDA/Triton kernels."
+
+- id: sglang.py.other_srt
+  display_name: "SGLang SRT (other)"
+  category: OTHER
+  framework: sglang
+  match:
+    contains: ["sglang/srt/"]
+  confidence: low
+  source:
+    repository: sglang
+    path: python/sglang/srt/
+    symbol: ""
+    description: "Other SGLang runtime functions not covered by specific rules."
+
+- id: sglang.py.utils_top
+  display_name: "SGLang Utils (top-level)"
+  category: OTHER
+  framework: sglang
+  match:
+    contains: ["sglang/utils.py"]
+  confidence: low
+  source:
+    repository: sglang
+    path: python/sglang/utils.py
+    symbol: ""
+    description: "Top-level SGLang utility functions."

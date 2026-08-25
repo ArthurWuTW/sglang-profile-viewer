@@ -158,3 +158,110 @@ def test_source_mapping_resolved():
     src = m.rule_by_id(r.id).source
     assert src["repository"] == "sglang"
     assert src["symbol"] == "store_kvcache"
+
+
+# ---------------------------------------------------------------------------
+# Python function mappings (sglang_python.yaml)
+# ---------------------------------------------------------------------------
+
+
+def test_python_scheduler_mapped():
+    m = _mapper()
+    r = m.classify("sglang/srt/managers/scheduler.py(1732): run_event_loop")
+    assert r is not None
+    assert r.category == "SCHEDULER"
+    assert r.framework == "sglang"
+
+
+def test_python_schedule_batch_mapped():
+    m = _mapper()
+    r = m.classify("sglang/srt/managers/schedule_batch.py(1213): seqlen")
+    assert r is not None
+    assert r.category == "SCHEDULER"
+
+
+def test_python_model_runner_mapped():
+    m = _mapper()
+    r = m.classify("sglang/srt/model_executor/model_runner.py(1520): forward")
+    assert r is not None
+    assert r.category == "SCHEDULER"
+
+
+def test_python_attention_mapped():
+    m = _mapper()
+    r = m.classify(
+        "sglang/srt/layers/attention/flashinfer_backend.py(1234): forward_extend"
+    )
+    assert r is not None
+    assert r.category == "ATTENTION"
+
+
+def test_python_layernorm_mapped():
+    m = _mapper()
+    r = m.classify("sglang/srt/layers/layernorm.py(100): forward_cuda")
+    assert r is not None
+    assert r.category == "RMSNORM"
+
+
+def test_python_linear_mapped():
+    m = _mapper()
+    r = m.classify("sglang/srt/layers/linear.py(50): forward")
+    assert r is not None
+    assert r.category == "LINEAR"
+
+
+def test_python_activation_mapped():
+    m = _mapper()
+    r = m.classify("sglang/srt/layers/activation.py(50): forward_cuda")
+    assert r is not None
+    assert r.category == "ACTIVATION"
+
+
+def test_python_samplers_mapped():
+    m = _mapper()
+    r = m.classify("sglang/srt/layers/sampler.py(100): forward")
+    assert r is not None
+    assert r.category == "SAMPLING"
+
+
+def test_python_embedding_mapped():
+    m = _mapper()
+    r = m.classify("sglang/srt/layers/vocab_parallel_embedding.py(50): forward")
+    assert r is not None
+    assert r.category == "EMBEDDING"
+
+
+def test_python_rope_mapped():
+    m = _mapper()
+    r = m.classify("sglang/srt/layers/rotary_embedding/base.py(50): forward_cuda")
+    assert r is not None
+    assert r.category == "ROPE"
+
+
+def test_python_kv_cache_mapped():
+    m = _mapper()
+    r = m.classify("sglang/srt/mem_cache/memory_pool.py(100): alloc")
+    assert r is not None
+    assert r.category == "KV_CACHE"
+
+
+def test_python_distributed_mapped():
+    m = _mapper()
+    r = m.classify("sglang/srt/distributed/parallel_state.py(100): get_tp_group")
+    assert r is not None
+    assert r.category == "SYNCHRONIZATION"
+
+
+def test_python_fallback_other():
+    m = _mapper()
+    r = m.classify("sglang/srt/environ.py(50): get")
+    assert r is not None
+    assert r.category == "OTHER"
+
+
+def test_python_fallback_catches_all_srt():
+    m = _mapper()
+    r = m.classify("sglang/srt/some_new_module.py(1): some_func")
+    assert r is not None
+    assert r.category == "OTHER"
+    assert r.framework == "sglang"
