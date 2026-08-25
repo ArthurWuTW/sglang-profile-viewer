@@ -51,7 +51,7 @@ process serves both the API and the UI.
 ./run.sh               # build frontend (if stale/missing) + start backend
 ./run.sh --no-build    # skip the frontend build, just start the backend
 ./run.sh --rebuild     # force a clean frontend rebuild
-PORT=8080 ./run.sh     # override any setting via environment variables
+PORT=9000 ./run.sh     # override any setting via environment variables
 ```
 
 The script:
@@ -63,7 +63,7 @@ The script:
 - serves the built frontend from `frontend/dist` and the API from the same
   process.
 
-Then open <http://127.0.0.1:8080>.
+Then open <http://127.0.0.1:6006>.
 
 ### Manual (build + run separately)
 
@@ -86,7 +86,7 @@ cd backend
 PROFILE_ROOT=/root/.cache/profile_log \
 MAPPINGS_DIR=../mappings \
 FRONTEND_DIST=../frontend/dist \
-PORT=8080 \
+PORT=6006 \
 python3.12 -m uvicorn app.main:app --host 0.0.0.0 --port 6006
 ```
 
@@ -98,7 +98,7 @@ python3.12 -m uvicorn app.main:app --host 0.0.0.0 --port 6006
 | -------------------------- | --------------------------- | ---------------------------------------- |
 | `PROFILE_ROOT`             | `/root/.cache/profile_log`  | Directory scanned for `*.json.gz` traces |
 | `HOST`                     | `127.0.0.1`                 | Bind host                                |
-| `PORT`                     | `8080`                      | Bind port                                |
+| `PORT`                     | `6006`                      | Bind port                                |
 | `WATCH_INTERVAL`           | `2.0`                       | Periodic rescan interval (seconds)       |
 | `FILE_STABILITY_CHECK_DELAY` | `1.0`                     | Size-stability wait before parsing (s)   |
 | `MAX_LOADED_PROFILES`      | `3`                         | LRU cache size for parsed traces         |

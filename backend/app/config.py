@@ -55,7 +55,7 @@ class Settings:
         return cls(
             profile_root=profile_root,
             host=o.get("host") or _env("HOST", "127.0.0.1"),
-            port=_env_int("PORT", 8080),
+            port=_env_int("PORT", 6006),
             watch_interval=_env_float("WATCH_INTERVAL", 2.0),
             file_stability_delay=_env_float("FILE_STABILITY_CHECK_DELAY", 1.0),
             max_loaded_profiles=_env_int("MAX_LOADED_PROFILES", 3),
