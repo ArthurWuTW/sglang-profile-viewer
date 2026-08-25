@@ -1,0 +1,98 @@
+# FlashInfer-specific mapping rules.
+#
+# These map FlashInfer kernels (used by SGLang's attention backends) to semantic
+# categories. Source references point at the SGLang backend that invokes them,
+# since that is where a SGLang developer should look.
+
+# ---------------------------------------------------------------- RMSNorm
+- id: flashinfer.rmsnorm
+  display_name: "RMSNorm"
+  category: RMSNORM
+  framework: flashinfer
+  match:
+    qualified_exact: ["flashinfer::norm::RMSNormKernel"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/layernorm.py
+    symbol: RMSNorm
+    description: "FlashInfer RMSNorm kernel invoked by SGLang's RMSNorm layer."
+
+- id: flashinfer.fused_add_rmsnorm
+  display_name: "FusedAdd RMSNorm"
+  category: RMSNORM
+  framework: flashinfer
+  match:
+    qualified_exact: ["flashinfer::norm::FusedAddRMSNormKernel"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/layernorm.py
+    symbol: RMSNorm
+    description: "FlashInfer fused residual-add + RMSNorm kernel."
+
+# ---------------------------------------------------------------- Attention
+- id: flashinfer.attention.prefill_paged
+  display_name: "Attention (Prefill, Paged KV)"
+  category: ATTENTION
+  framework: flashinfer
+  match:
+    qualified_exact: ["flashinfer::BatchPrefillWithPagedKVCacheKernel"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/attention/flashinfer_backend.py
+    symbol: FlashInferBackend.forward
+    description: "FlashInfer batch prefill attention over paged KV cache."
+
+- id: flashinfer.attention.prefill_ragged
+  display_name: "Attention (Prefill, Ragged KV)"
+  category: ATTENTION
+  framework: flashinfer
+  match:
+    qualified_exact: ["flashinfer::BatchPrefillWithRaggedKVCacheKernel"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/attention/flashinfer_backend.py
+    symbol: FlashInferBackend.forward
+    description: "FlashInfer batch prefill attention over ragged KV cache."
+
+- id: flashinfer.attention.prefill_decode
+  display_name: "Attention (Prefill+Decode)"
+  category: ATTENTION
+  framework: flashinfer
+  match:
+    qualified_exact: ["flashinfer::BatchPrefillDecodeKVCacheKernel"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/attention/flashinfer_backend.py
+    symbol: FlashInferBackend.forward
+    description: "FlashInfer batch prefill+decode attention kernel."
+
+- id: flashinfer.attention.merge_state
+  display_name: "Attention Merge State"
+  category: ATTENTION
+  framework: flashinfer
+  match:
+    qualified_exact: ["flashinfer::MergeStateKernel"]
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/attention/flashinfer_backend.py
+    symbol: FlashInferBackend.forward
+    description: "Merges attention output states (e.g. across splits)."
+
+- id: flashinfer.attention.merge_states_persistent
+  display_name: "Attention Merge States (Persistent)"
+  category: ATTENTION
+  framework: flashinfer
+  match:
+    qualified_exact: ["flashinfer::PersistentVariableLengthMergeStatesKernel"]
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/attention/flashinfer_backend.py
+    symbol: FlashInferBackend.forward
+    description: "Persistent variable-length merge of attention states."

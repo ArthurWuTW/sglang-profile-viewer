@@ -1,0 +1,207 @@
+# SGLang-specific mapping rules.
+#
+# These map SGLang's own kernels, Triton kernels, and scheduler annotations to
+# semantic categories and SGLang source-code locations.
+
+# ---------------------------------------------------------------- Step span
+- id: sglang.step.annotation
+  display_name: "Step"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    regex: "^step\\["
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/model_executor/step_span_utils.py
+    symbol: build_step_span_name
+    description: >
+      Per-forward step span wrapping ModelRunner.forward; the label carries the
+      forward mode (stage) and batch shape, e.g. step[DECODE bs=1].
+
+# ---------------------------------------------------------------- Scheduler
+- id: sglang.scheduler.run_batch
+  display_name: "Scheduler: run_batch"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    exact: ["scheduler.run_batch"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/scheduler.py
+    symbol: Scheduler.run_batch
+    description: "Runs one forward batch on the model runner."
+
+- id: sglang.scheduler.get_next_batch
+  display_name: "Scheduler: get_next_batch_to_run"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    exact: ["scheduler.get_next_batch_to_run"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/scheduler.py
+    symbol: Scheduler.get_next_batch_to_run
+    description: "Builds the next batch to run from the waiting queue."
+
+- id: sglang.scheduler.recv_requests
+  display_name: "Scheduler: recv_requests"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    exact: ["scheduler.recv_requests"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/scheduler.py
+    symbol: Scheduler.recv_requests
+    description: "Receives new requests from the tokenizer / frontend."
+
+- id: sglang.scheduler.process_batch_result
+  display_name: "Scheduler: process_batch_result"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    exact: ["scheduler.process_batch_result"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/scheduler.py
+    symbol: Scheduler.process_batch_result
+    description: "Processes the result of a forward batch (sampling, bookkeeping)."
+
+- id: sglang.scheduler.process_input_requests
+  display_name: "Scheduler: process_input_requests"
+  category: SCHEDULER
+  framework: sglang
+  match:
+    exact: ["scheduler.process_input_requests"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/scheduler.py
+    symbol: Scheduler.process_input_requests
+    description: "Processes newly arrived input requests."
+
+# ---------------------------------------------------------------- RoPE
+- id: sglang.rope.fused
+  display_name: "RoPE"
+  category: ROPE
+  framework: sglang
+  match:
+    qualified_exact: ["sglang::fused_rope_kernel"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/kernels/jit/csrc/elementwise/rope.cuh
+    symbol: fused_rope_kernel
+    description: "Fused rotary position embedding applied to Q/K."
+
+- id: sglang.rope.compute_position
+  display_name: "Position Compute"
+  category: ROPE
+  framework: sglang
+  match:
+    exact: ["compute_position_kernel"]
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/kernels/ops/attention/position.py
+    symbol: compute_position_kernel
+    description: "Computes position ids used by RoPE."
+
+- id: sglang.position.clamp
+  display_name: "Clamp Position"
+  category: OTHER
+  framework: sglang
+  match:
+    qualified_exact: ["sglang::clamp_position_kernel"]
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/kernels/jit/csrc/elementwise/clamp_position.cuh
+    symbol: clamp_position_kernel
+    description: "Clamps position ids to a valid range."
+
+# ---------------------------------------------------------------- KV Cache
+- id: sglang.kvcache.store
+  display_name: "KV Cache Store"
+  category: KV_CACHE
+  framework: sglang
+  match:
+    qualified_exact: ["sglang::store_kvcache"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/kernels/jit/csrc/elementwise/kvcache.cuh
+    symbol: store_kvcache
+    description: "Stores K/V into the paged KV cache."
+
+- id: sglang.kvcache.indices
+  display_name: "KV Indices Build"
+  category: KV_CACHE
+  framework: sglang
+  match:
+    exact: ["create_flashinfer_kv_indices_triton"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/kernels/ops/kvcache/kv_indices.py
+    symbol: create_flashinfer_kv_indices_triton
+    description: "Builds the paged KV cache index tensor for FlashInfer."
+
+- id: sglang.memory.token_pool
+  display_name: "Token Pool Write"
+  category: MEMORY
+  framework: sglang
+  match:
+    exact: ["write_req_to_token_pool_triton"]
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/kernels/ops/memory/common.py
+    symbol: write_req_to_token_pool_triton
+    description: "Writes request token data into the token pool."
+
+# ---------------------------------------------------------------- Activation / MLP
+- id: sglang.activation.act_and_mul
+  display_name: "MLP Activation (SiLU·Mul)"
+  category: ACTIVATION
+  framework: sglang
+  match:
+    qualified_exact: ["sglang::act_and_mul_kernel"]
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/kernels/jit/csrc/elementwise/activation.cuh
+    symbol: act_and_mul_kernel
+    description: "SiLU activation + multiply for the MLP intermediate."
+
+# ---------------------------------------------------------------- Memory / result copy
+- id: sglang.memory.copy_result_to_cpu
+  display_name: "Copy Result to CPU"
+  category: MEMORY
+  framework: sglang
+  match:
+    exact: ["copy_result_to_cpu"]
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/utils.py
+    symbol: copy_result_to_cpu
+    description: "Copies model output (logits / hidden states) back to CPU."
+
+- id: sglang.memory.copy_embedding_to_cpu
+  display_name: "Copy Embedding to CPU"
+  category: MEMORY
+  framework: sglang
+  match:
+    exact: ["copy_embedding_to_cpu"]
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/srt/managers/utils.py
+    symbol: copy_embedding_to_cpu
+    description: "Copies embedding output back to CPU."

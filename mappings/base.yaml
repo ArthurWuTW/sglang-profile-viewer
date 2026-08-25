@@ -1,0 +1,388 @@
+# Base mapping rules: generic PyTorch / cuBLAS / CUDA runtime events.
+#
+# Match strategy precedence (highest first):
+#   exact > qualified_exact > regex > contains / contains_any
+# Within the same strategy, the rule that appears first in load order wins.
+# Load order: base.yaml, then remaining files in sorted path order.
+
+# ---------------------------------------------------------------- Linear / GEMM
+- id: base.linear.aten
+  display_name: "Linear (aten)"
+  category: LINEAR
+  framework: pytorch
+  match:
+    exact:
+      - "aten::linear"
+      - "aten::mm"
+      - "aten::addmm"
+      - "aten::bmm"
+      - "aten::baddbmm"
+      - "aten::matmul"
+      - "aten::mv"
+      - "aten::dot"
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/linear.py
+    symbol: Linear
+    description: >
+      Dense linear projection. In a transformer layer this GEMM is one of
+      qkv_proj / o_proj / gate_up_proj / down_proj; the kernel name alone does
+      not encode which one.
+
+- id: base.gemm.cublas
+  display_name: "GEMM (cuBLAS)"
+  category: LINEAR
+  framework: cublas
+  match:
+    contains_any:
+      - "gemm"
+      - "gemv"
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/linear.py
+    symbol: Linear
+    description: >
+      cuBLAS dense GEMM/GEMV kernel (linear projection). The template name does
+      not encode which projection (qkv / o / gate_up / down).
+
+# ---------------------------------------------------------------- RMSNorm
+- id: base.rmsnorm.aten
+  display_name: "RMSNorm (aten)"
+  category: RMSNORM
+  framework: pytorch
+  match:
+    contains_any:
+      - "_fused_rms_norm"
+      - "rms_norm"
+      - "rmsnorm"
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/layernorm.py
+    symbol: RMSNorm
+    description: "Root-mean-square layer normalization."
+
+# ---------------------------------------------------------------- Sampling
+- id: base.sampling.multinomial
+  display_name: "Sampling (multinomial)"
+  category: SAMPLING
+  framework: pytorch
+  match:
+    exact:
+      - "aten::multinomial"
+      - "aten::bernoulli"
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/sampler.py
+    symbol: Sampler
+    description: "Random token sampling."
+
+- id: base.sampling.softmax
+  display_name: "Sampling (softmax)"
+  category: SAMPLING
+  framework: pytorch
+  match:
+    exact:
+      - "aten::softmax"
+      - "aten::log_softmax"
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/sampler.py
+    symbol: Sampler
+    description: "Logit normalization for sampling."
+
+- id: base.sampling.topk
+  display_name: "Sampling (top-k)"
+  category: SAMPLING
+  framework: pytorch
+  match:
+    exact:
+      - "aten::topk"
+      - "aten::argmax"
+      - "aten::max"
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/sampler.py
+    symbol: Sampler
+    description: "Top-k / argmax selection over logits."
+
+- id: base.sampling.random
+  display_name: "Sampling (random)"
+  category: SAMPLING
+  framework: pytorch
+  match:
+    exact:
+      - "aten::uniform_"
+      - "aten::normal_"
+      - "aten::exponential_"
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/sampler.py
+    symbol: Sampler
+    description: "Random number generation for sampling."
+
+# ---------------------------------------------------------------- Embedding
+- id: base.embedding
+  display_name: "Embedding"
+  category: EMBEDDING
+  framework: pytorch
+  match:
+    exact:
+      - "aten::embedding"
+      - "aten::embedding_bag"
+  confidence: high
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/vocab_parallel_embedding.py
+    symbol: VocabParallelEmbedding
+    description: "Token embedding lookup."
+
+# ---------------------------------------------------------------- Memory
+- id: base.memory.copy
+  display_name: "Memory Copy"
+  category: MEMORY
+  framework: pytorch
+  match:
+    exact:
+      - "aten::copy_"
+      - "aten::_foreach_copy_"
+      - "aten::cat"
+      - "aten::clone"
+      - "aten::to"
+      - "aten::_to_copy"
+      - "aten::fill_"
+      - "aten::zero_"
+      - "aten::empty"
+      - "aten::empty_strided"
+      - "aten::empty_like"
+      - "aten::new_empty"
+  confidence: low
+  source:
+    repository: pytorch
+    description: "Tensor copy / allocation / cast."
+
+- id: base.memory.memcpy
+  display_name: "GPU Memcpy"
+  category: MEMORY
+  framework: cuda
+  match:
+    contains_any:
+      - "Memcpy DtoD"
+      - "Memcpy HtoD"
+      - "Memcpy DtoH"
+  confidence: high
+  source:
+    repository: cuda
+    description: "Device memory copy."
+
+- id: base.memory.memset
+  display_name: "GPU Memset"
+  category: MEMORY
+  framework: cuda
+  match:
+    contains:
+      - "Memset"
+  confidence: high
+  source:
+    repository: cuda
+    description: "Device memory set."
+
+# ---------------------------------------------------------------- Synchronization
+- id: base.sync.cuda
+  display_name: "CUDA Sync"
+  category: SYNCHRONIZATION
+  framework: cuda
+  match:
+    contains_any:
+      - "cudaStreamSynchronize"
+      - "cudaDeviceSynchronize"
+      - "cudaEventSynchronize"
+      - "cudaStreamWaitEvent"
+      - "cudaEventRecord"
+  confidence: high
+  source:
+    repository: cuda
+    description: "CUDA stream / device synchronization."
+
+- id: base.sync.item
+  display_name: "Device Sync (item)"
+  category: SYNCHRONIZATION
+  framework: pytorch
+  match:
+    exact:
+      - "aten::item"
+      - "aten::_local_scalar_dense"
+  confidence: medium
+  source:
+    repository: pytorch
+    description: "Implicit device-to-host sync to read a scalar."
+
+# ---------------------------------------------------------------- Kernel launch
+- id: base.launch.cuda
+  display_name: "Kernel Launch"
+  category: OTHER
+  framework: cuda
+  match:
+    contains_any:
+      - "cudaLaunchKernel"
+      - "cuLaunchKernel"
+      - "cudaGraphLaunch"
+  confidence: low
+  source:
+    repository: cuda
+    description: "CUDA kernel launch (CPU-side)."
+
+# ---------------------------------------------------------------- Elementwise / reduce (generic)
+- id: base.reduce.argmax
+  display_name: "Reduce (argmax)"
+  category: SAMPLING
+  framework: pytorch
+  match:
+    contains:
+      - "reduce_kernel"
+      - "ArgMaxOps"
+  confidence: medium
+  source:
+    repository: sglang
+    path: python/sglang/srt/layers/sampler.py
+    symbol: Sampler
+    description: "Argmax reduction, typically used for greedy sampling."
+
+- id: base.reduce.generic
+  display_name: "Reduce"
+  category: OTHER
+  framework: pytorch
+  match:
+    contains:
+      - "reduce_kernel"
+  confidence: low
+  source:
+    repository: pytorch
+    description: "Generic reduction kernel."
+
+- id: base.elementwise
+  display_name: "Elementwise"
+  category: OTHER
+  framework: pytorch
+  match:
+    contains_any:
+      - "elementwise_kernel"
+      - "vectorized_elementwise"
+      - "unrolled_elementwise"
+  confidence: low
+  source:
+    repository: pytorch
+    description: "Generic elementwise kernel."
+
+- id: base.index
+  display_name: "Index / Gather"
+  category: OTHER
+  framework: pytorch
+  match:
+    contains_any:
+      - "index_elementwise_kernel"
+      - "indexSelect"
+      - "index_kernel"
+      - "gather_kernel"
+      - "scatter"
+  confidence: low
+  source:
+    repository: pytorch
+    description: "Indexing / gather / scatter."
+
+- id: base.concat
+  display_name: "Concat"
+  category: MEMORY
+  framework: pytorch
+  match:
+    contains:
+      - "CatArrayBatchedCopy"
+  confidence: low
+  source:
+    repository: pytorch
+    description: "Tensor concatenation copy."
+
+- id: base.scan
+  display_name: "Scan (cumsum)"
+  category: OTHER
+  framework: pytorch
+  match:
+    contains:
+      - "cub::detail::scan"
+  confidence: low
+  source:
+    repository: pytorch
+    description: "CUB device scan (cumsum)."
+
+- id: base.multi_tensor
+  display_name: "Multi-tensor"
+  category: OTHER
+  framework: pytorch
+  match:
+    contains:
+      - "multi_tensor_apply_kernel"
+  confidence: low
+  source:
+    repository: pytorch
+    description: "Fused multi-tensor apply (optimizer / bookkeeping)."
+
+- id: base.view
+  display_name: "View / Reshape"
+  category: OTHER
+  framework: pytorch
+  match:
+    exact:
+      - "aten::view"
+      - "aten::reshape"
+      - "aten::as_strided"
+      - "aten::transpose"
+      - "aten::t"
+      - "aten::slice"
+      - "aten::select"
+      - "aten::lift_fresh"
+      - "aten::resolve_conj"
+      - "aten::resolve_neg"
+      - "aten::unsqueeze"
+      - "aten::squeeze"
+  confidence: low
+  source:
+    repository: pytorch
+    description: "View / reshape / transpose (no data movement)."
+
+- id: base.math
+  display_name: "Math Op"
+  category: OTHER
+  framework: pytorch
+  match:
+    exact:
+      - "aten::add"
+      - "aten::sub"
+      - "aten::mul"
+      - "aten::div"
+      - "aten::neg"
+      - "aten::clamp"
+      - "aten::exp"
+      - "aten::sqrt"
+      - "aten::rsqrt"
+      - "aten::reciprocal"
+      - "aten::pow"
+      - "aten::sum"
+      - "aten::mean"
+      - "aten::min"
+      - "aten::cumsum"
+      - "aten::where"
+      - "aten::masked_fill"
+      - "aten::masked_select"
+      - "aten::nonzero"
+      - "aten::sort"
+      - "aten::argsort"
+  confidence: low
+  source:
+    repository: pytorch
+    description: "Generic elementwise / reduction math op."
